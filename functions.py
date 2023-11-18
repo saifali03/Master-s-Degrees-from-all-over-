@@ -2,6 +2,7 @@
 import pandas as pd
 import math
 import re
+import heapq
 import regex
 import os
 from collections import defaultdict, Counter
@@ -13,6 +14,7 @@ from nltk.tokenize import word_tokenize
 import json
 import requests
 from tqdm import tqdm
+import numpy as np
 
 #### essential prep for pre-processing text
 nltk.download('punkt')
@@ -201,9 +203,108 @@ def search_engine(term_ids, df, inverted_index):
     for row in intersection_list:
         new_row = {
         'courseName': df.loc[row, 'courseName'], # original courseName column and not the clean ones 
-        'universityName': df.loc[row, 'description'], # similar argument
+        'universityName': df.loc[row, 'universityName'], # similar argument
         'description': df.loc[row, 'description']
         }
         rows_to_append.append(new_row)
     new_df = pd.DataFrame(rows_to_append) # creating the new dataframe to be returned on execution of the function
     return new_df
+
+def inverted_index_tfidf(word_and_appearances, df):
+    """
+    Term Frequency: TF of a term or word is the number of times the term appears in a document compared to the total
+    number of words in the document. 
+    Inverse Document Frequency: Number of documents in the corpus divided by the number of documents in the corpus 
+    that contain the term.
+    Source learndatasci.com/glossary/tf-idf-term-frequency-inverse-document-frequency/
+    """
+    new_index = {} # a dict with key as term_id of the word and as value: a tuple(row_at_which_word_occured, tfidf)
+    words = list(word_and_appearances.keys()) # getting all the words of the vocabulary
+    for word in words:
+        appearances = word_and_appearances[word] # getting all the places (rows of df) where the word occured
+        list_of_tuples = [] # to store list of tuple (row_at_which_word_occured, tfidf)
+        for df_position in appearances:
+            df_row = df.at[df_position, "description_clean"] # going at that row
+            tf = df_row.count(word) / len(df_row) # computing the term frequency
+            idf = math.log(len(df)/len(appearances)) # computing the inverse doc frequency
+            tf_idf = round(tf * idf, 2) # # computing the tf * idf
+            list_of_tuples.append((df_position,tf_idf)) # appending to the list ot tuples
+        new_index[words.index(word)] = list_of_tuples # filling the index
+    return new_index
+
+# Computes TF-IDF for the query
+def calculate_query_tfidf(normalized_query, word_and_appearances, df):
+    query_tfidf = {} # a dict with key as the word and as value the tfidf
+    for word in normalized_query:
+        if word in word_and_appearances:
+            appearances = word_and_appearances[word] # similar arguments as the inverted_index_tfidf
+            tf = normalized_query.count(word) / len(normalized_query)
+            idf = math.log(len(df) / len(appearances))
+            tf_idf = round(tf * idf, 2)
+            query_tfidf[word] = tf_idf
+    return query_tfidf
+
+# Computes TF-IDF for the document
+def calculate_document_tfidf(document_vector, word_and_appearances, df):
+    document_tfidf = {} # a dict with key as the word and as value the tfidf
+    for word in document_vector:
+        if word in word_and_appearances:
+            appearances = word_and_appearances[word] # similar arguments as the inverted_index_tfidf
+            tf = document_vector.count(word) / len(document_vector)
+            idf = math.log(len(df) / len(appearances))
+            tf_idf = round(tf * idf, 2)
+            document_tfidf[word] = tf_idf
+    return document_tfidf
+
+def return_results(top_10_documents, similarity_scores, df):
+    rows_to_append = [] # original dataframe rows that will depend top_10_documents
+    for row in top_10_documents:
+        new_row = {
+        'courseName': df.loc[row, 'courseName'],  # Original courseName column, not the clean one
+        'universityName': df.loc[row, 'universityName'],  # Similar argument
+        'description': df.loc[row, 'description'], # Similar argument
+        'Cosine_Similarity': similarity_scores[row] # corresponding similarity score
+        }
+        rows_to_append.append(new_row)
+    new_df = pd.DataFrame(rows_to_append)  # Creating the new DataFrame to be returned on execution of the function
+    return new_df
+
+def search_engine_full(term_ids, df, inverted_index):
+    appearances = list()
+    [appearances.append(inverted_index[str(term)]) for term in term_ids]
+# initialising the set with the value of the first list of appearances in the list of appearances of the word
+    intersection_list = set(appearances[0])
+    for appearance in appearances[1:]: # for the rest of the terms in the list of term ids
+        intersection_list.intersection_update(appearance) # intersect and update the set
+    rows_to_append = [] # will be used to create the dataframe
+    for row in intersection_list:
+        new_row = {
+        'courseName': df.loc[row, 'courseName'], # original courseName column and not the clean ones 
+        'universityName': df.loc[row, 'universityName'], # similar argument
+        'facultyName': df.loc[row, 'facultyName'],
+        'city': df.loc[row, 'city'],
+        'country': df.loc[row, 'country'],
+        'description': df.loc[row, 'description'],
+        }
+        rows_to_append.append(new_row)
+    new_df = pd.DataFrame(rows_to_append) # creating the new dataframe to be returned on execution of the function
+    return new_df
+
+def calculate_weights(query, df):
+    value_courseName = 5 if any(query.lower() in value.lower() for value in df['courseName']) else 1
+    value_description = 2 if any(query.lower() in value.lower() for value in df['description']) else 0.5
+    value_universityName = 5 if any(query.lower() in value.lower() for value in df['universityName']) else 1
+    value_city = 5 if any(query.lower() in value.lower() for value in df['city']) else 1
+    value_country = 5 if any(query.lower() in value.lower() for value in df['country']) else 1
+    value_faculty = 5 if any(query.lower() in value.lower() for value in df['country']) else 1
+
+    total = value_courseName + value_description + value_universityName + value_city + value_country + value_faculty
+    weights = {
+        'description': value_description/total,
+        'courseName': value_courseName/total,
+        'universityName': value_universityName/total,
+        'city': value_city/total,
+        'country': value_country/total,
+        'facultyName': value_faculty/total
+    }
+    return weights
