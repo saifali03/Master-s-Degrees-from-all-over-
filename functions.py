@@ -291,6 +291,8 @@ def search_engine_full(term_ids, df, inverted_index):
     return new_df
 
 def calculate_weights(query, df):
+    if df.empty:
+        raise ValueError
     value_courseName = 5 if any(query.lower() in value.lower() for value in df['courseName']) else 1
     value_description = 2 if any(query.lower() in value.lower() for value in df['description']) else 0.5
     value_universityName = 5 if any(query.lower() in value.lower() for value in df['universityName']) else 1
