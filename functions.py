@@ -15,6 +15,8 @@ import json
 import requests
 from tqdm import tqdm
 import numpy as np
+import heapq
+from fuzzywuzzy import fuzz
 
 #### essential prep for pre-processing text
 nltk.download('punkt')
@@ -144,7 +146,7 @@ def extract_currency_name(x):
 
 #### function to standardise the fee column in EUR
 def convert_to_eur(amount, currency):
-    url = f"https://v6.exchangerate-api.com/v6/29871ea4d8f3d0efe4ffb037/latest/{currency}" # GPT HELPED
+    url = f"https://v6.exchangerate-api.com/v6/9d366d5d4a6e4026519db9f9/latest/{currency}" # GPT HELPED
     response = requests.get(url)
     data = response.json()
     if data["result"] == "success": # if key "result" is "success" (following the structure of the json file)
@@ -285,22 +287,56 @@ def search_engine_full(term_ids, df, inverted_index):
         'city': df.loc[row, 'city'],
         'country': df.loc[row, 'country'],
         'description': df.loc[row, 'description'],
+        'FEE_EUR': df.loc[row, 'FEE_EUR'],
         }
         rows_to_append.append(new_row)
     new_df = pd.DataFrame(rows_to_append) # creating the new dataframe to be returned on execution of the function
     return new_df
 
+
+def verify_occurences(df, column, query):
+    """
+    Args:
+        df (DatFrame): dataframe
+        column (str): name of the column
+        query (str): input query
+
+    Returns:
+        Bool: True if an element of query matches a cell of the df[column]
+    """
+    for elem in query.lower().split():
+        for elem_b in list(map(str.lower, df[column].tolist())):
+            if elem in elem_b:
+                return True
+    return False
+
+
 def calculate_weights(query, df):
+    """computes the values of the weights verifying if at least a 
+    word in the query matches the column of the df
+
+    Args:
+        query (str): input query
+        df (DataFrame): dataframe
+
+    Raises:
+        ValueError: _description_
+
+    Returns:
+        _type_: _description_
+    """
     if df.empty:
         raise ValueError
-    value_courseName = 5 if any(query.lower() in value.lower() for value in df['courseName']) else 1
-    value_description = 2 if any(query.lower() in value.lower() for value in df['description']) else 0.5
-    value_universityName = 5 if any(query.lower() in value.lower() for value in df['universityName']) else 1
-    value_city = 5 if any(query.lower() in value.lower() for value in df['city']) else 1
-    value_country = 5 if any(query.lower() in value.lower() for value in df['country']) else 1
-    value_faculty = 5 if any(query.lower() in value.lower() for value in df['country']) else 1
-
+    # checking for the most interesting columns if a word of the query matches
+    # the contents of the dataframe columns
+    value_courseName = 5 if verify_occurences(df, 'courseName', query) else 1
+    value_description = 2 if verify_occurences(df, 'description', query) else 0.5
+    value_universityName = 5 if verify_occurences(df, 'universityName', query) else 1
+    value_city = 5 if verify_occurences(df, 'city', query) else 1
+    value_country = 5 if verify_occurences(df, 'country', query) else 1
+    value_faculty = 5 if verify_occurences(df, 'facultyName', query) else 1
     total = value_courseName + value_description + value_universityName + value_city + value_country + value_faculty
+    # Normalizing the weights
     weights = {
         'description': value_description/total,
         'courseName': value_courseName/total,
@@ -310,3 +346,29 @@ def calculate_weights(query, df):
         'facultyName': value_faculty/total
     }
     return weights
+
+def calculate_total_score(query, df, weights):
+    """calculus of the new score function based on different columns,
+    and on the Levenshtein Distance.
+
+    Args:
+        query (str): input query
+        df (DataFrame): dataframe
+        weights (dict): dictionary containing the weights of the columns of the df
+
+    Returns:
+        float: value of the new_score
+    """
+    total_score = 0
+    
+    for variable, weight in weights.items():
+        if variable in df and isinstance(df[variable], str):
+            # Calculate text similarity based on the ratio (using fuzzywuzzy library)
+            similarity_score = fuzz.ratio(query, df[variable])
+            # Normalize the similarity score between 0 and 1
+            normalized_similarity = similarity_score / 100.0
+            # Calculate the weighted score for the current variable
+            variable_score = normalized_similarity * weight
+            total_score += variable_score
+
+    return total_score
