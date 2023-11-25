@@ -7,6 +7,9 @@
 
 The repository contains the submission of the third homework for the course "Algorithmic Methods of Data Mining", for the Group #22.
 ## Contents
+
+**NB**: We've identified recent changes on certain pages of the website since the time our web crawler was last run. The results obtained may not be entirely accurate compared to the current content on the website.
+
 * __`main.ipynb`__:
     > The Jupyter notebook with the solutions to all the questions. The cells are already executed.
 * __`functions`__:
