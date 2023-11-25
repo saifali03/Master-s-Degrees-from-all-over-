@@ -32,5 +32,12 @@ The repository contains the submission of the third homework for the course "Alg
         > The .tsv file which merges all the 6000 files. After importing this file in the `main.ipynb` we will create the dataframe we used for the nest questions.
     * __`master_programs_html.7z`__:
         > A zip file containing the 6000 HTML pages of the Master Courses, organized in 400 folders with 15 pages each.
-
+* __`Q2 outputs`__:
+    > A folder containing all the outputs of Q2. The folder includes:
+    * __`inverted_index_1.json`__:
+        > 
+    * __`inverted_index_tfidf.json`__:
+        > 
+    * __`vocabulary.json`__:
+        > 
         
