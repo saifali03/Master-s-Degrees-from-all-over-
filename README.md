@@ -39,7 +39,7 @@ The repository contains the submission of the third homework for the course "Alg
     * __`master_programs_html.7z`__
         > A zip file containing the 6000 HTML pages of the Master Courses, organized in 400 folders with 15 pages each.
 * __`Q2 outputs`__
-    > A folder containing all the outputs of Q2. The folder includes:
+    > A folder containing all the outputs of Q2. The folder includes the following vocabularies used to solve Q2 and let the engine work.
     * __`inverted_index_1.json`__
         > 
     * __`inverted_index_tfidf.json`__
