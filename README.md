@@ -3,7 +3,7 @@
 ## Team members
 * Riccardo Corrente 1964746
 * Branescu Ana Carina 2125078
-* INSERT NAME SURNAME 
+* Saif Ali 1936419
 
 The repository contains the submission of the third homework for the course "Algorithmic Methods of Data Mining", for the Group #22.
 ## Contents
