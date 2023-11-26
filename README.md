@@ -22,6 +22,8 @@ The repository contains the submission of the third homework for the course "Alg
         > Module containing all the functions used to create the Search Engine for Q2.
     * __`functions.py`__:
         > Module containing all the functions imported in the `main.ipynb` to solve the questions.
+* __`map_courses.html`__:
+    > The map obtained as the result of Q4, displaying universities filtered through Q3 using the query 'data science'.
 * __`Q1 outputs`__:
     > A folder containing all the outputs of Q1. The folder includes:
     * __`course_links.txt`__:
