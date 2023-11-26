@@ -46,4 +46,13 @@ The repository contains the submission of the third homework for the course "Alg
         > 
     * __`vocabulary.json`__
         > 
-        
+## Suddivision of exercises
+* Q1 - Riccardo
+* Q2 - Saif
+* Q3 - Riccardo
+* Q4 - Riccardo
+* Q5 - Ana
+* Q6 - Saif
+* Q7 - Ana
+* Notebook and repository organization - Riccardo
+    
