@@ -2,7 +2,7 @@
 
 ## Team members
 * Riccardo Corrente 1964746
-* INSERT NAME SURNAME 
+* Branescu Ana Carina 2125078
 * INSERT NAME SURNAME 
 
 The repository contains the submission of the third homework for the course "Algorithmic Methods of Data Mining", for the Group #22.
