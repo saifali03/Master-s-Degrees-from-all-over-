@@ -1,4 +1,6 @@
-# Algorithmic Methods of Data Mining (Sc.M. in Data Science). Homewok 3
+# Project for Course Algorithmic Methods of Data Mining
+
+## Master's Degrees from all over!
 
 ## Team members
 * Riccardo Corrente 1964746
